@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <title>Acquista Pacchetto</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 50px; }
+    .package { border: 1px solid #ccc; padding: 20px; margin: 10px; display: inline-block; width: 200px; }
+    button { padding: 10px 20px; margin-top: 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Scegli un pacchetto</h1>
+  <div id="packages-container"></div>
+
+  <script>
+    async function fetchPackages() {
+      const res = await fetch('/api/stripe/packages');
+      const packages = await res.json();
+
+      const container = document.getElementById('packages-container');
+      container.innerHTML = '';
+
+      packages.forEach(pkg => {
+        const div = document.createElement('div');
+        div.className = 'package';
+        div.innerHTML = `
+          <h2>${pkg.name}</h2>
+          <p>${pkg.price}</p>
+          <button onclick="checkout('${pkg.priceId}')">Acquista</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function checkout(priceId) {
+      try {
+        const response = await fetch('/api/stripe/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ priceId })
+        });
+        const data = await response.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          alert("Errore nella creazione della sessione");
+        }
+      } catch (error) {
+        console.error('Errore:', error);
+        alert("Errore durante il pagamento");
+      }
+    }
+
+    fetchPackages(); // carica i pacchetti all'avvio
+  </script>
+</body>
+</html>
