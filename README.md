@@ -19,7 +19,7 @@ To use webhooks:
 - Add an endpoint (your server URL + /api/stripe/webhook)
 - Get the signing secret and add it to your properties file
 
-## subscriptions
+## Products
 Create products and prices in your Stripe dashboard:
 
 - Go to Stripe Dashboard → Products
