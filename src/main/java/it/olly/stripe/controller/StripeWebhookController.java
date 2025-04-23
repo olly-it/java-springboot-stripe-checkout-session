@@ -26,7 +26,7 @@ public class StripeWebhookController {
     @PostMapping("/webhook")
     public ResponseEntity<String> handleStripeWebhook(@RequestHeader("Stripe-Signature") String sigHeader,
             @RequestBody String payload) {
-        System.out.println("handleStripeWebhook. H: " + sigHeader);
+        System.out.println("handleStripeWebhook. H: " + sigHeader + ", P: " + payload);
 
         Event event;
         try {
@@ -38,22 +38,52 @@ public class StripeWebhookController {
                     .body("Invalid signature");
         }
 
-        if ("checkout.session.completed".equals(event.getType())) {
-            // returns always null.. Version differences?
-            // Session session = (Session) event.getDataObjectDeserializer().getObject().orElse(null);
+        // event json
+        String jsonStr = event.getDataObjectDeserializer()
+                .getRawJson();
 
-            String sessionStr = event.getDataObjectDeserializer()
-                    .getRawJson();
-            Session session = StripeObject.deserializeStripeObject(sessionStr, Session.class,
-                                                                   ApiResource.getGlobalResponseGetter());
-            if (session != null) {
-                System.out.println("handleStripeWebhook - payment completed. sessionId: " + session.getId()
-                        + ", amount: " + session.getAmountTotal());
-            } else {
-                System.out.println("handleStripeWebhook - payment completed - session not found in object");
-            }
-        } else {
-            System.out.println("handleStripeWebhook - event is: " + event.getType());
+        String myTransactionId = null;
+        try {
+            // try to get myTranscationId for every type of events
+            myTransactionId = event.getRawJsonObject()
+                    .get("data")
+                    .getAsJsonObject()
+                    .get("object")
+                    .getAsJsonObject()
+                    .get("metadata")
+                    .getAsJsonObject()
+                    .get("myTransactionId")
+                    .getAsString();
+        } catch (Exception e) {
+            // System.out.println("myTransactionId not found on object");
+        }
+
+        System.out.println("handleStripeWebhook - event type is: " + event.getType() + ", myTransactionId: "
+                + myTransactionId);
+
+        switch (event.getType()) {
+            case "checkout.session.completed":
+                // NOTE: for many events i have metadata with myTransactionId.
+                // for this event metadata is empty.
+
+                // Session session = (Session) event.getDataObjectDeserializer().getObject().orElse(null);
+                // returns always null.. Version differences?
+
+                Session session = StripeObject.deserializeStripeObject(jsonStr, Session.class,
+                                                                       ApiResource.getGlobalResponseGetter());
+                if (session != null) {
+                    System.out.println("handleStripeWebhook - payment completed. sessionId: " + session.getId()
+                            + ", amount: " + session.getAmountTotal());
+                } else {
+                    System.out.println("handleStripeWebhook - payment completed - session not found in object");
+                }
+                break;
+            // case "charge.failed":
+            // System.out.println("charge failed");
+            // break;
+            default:
+                // System.out.println("unmanaged event: " + payload);
+                break;
         }
 
         return ResponseEntity.ok("");

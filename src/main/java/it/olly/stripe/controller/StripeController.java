@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -82,6 +83,8 @@ public class StripeController {
         System.out.println("POST createCheckoutSession(" + payload + ")");
         String priceId = (String) payload.get("priceId"); // ricevuto dal frontend
 
+        String myTransactionId = UUID.randomUUID()
+                .toString();
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
                 .setSuccessUrl(stripeRedirectSuccessUrl)
@@ -90,11 +93,15 @@ public class StripeController {
                         .setPrice(priceId)
                         .setQuantity(1L)
                         .build())
+                .setPaymentIntentData(SessionCreateParams.PaymentIntentData.builder()
+                        .putMetadata("myTransactionId", myTransactionId)
+                        .build())
                 .build();
 
         Session session = Session.create(params);
 
-        System.out.println("POST createCheckoutSession - created session. ID: " + session.getId());
+        System.out.println("POST createCheckoutSession - created session. ID: " + session.getId()
+                + ", myTransactionId: " + myTransactionId);
 
         Map<String, String> responseData = new HashMap<>();
         responseData.put("url", session.getUrl());

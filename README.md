@@ -29,7 +29,18 @@ Create products and prices in your Stripe dashboard:
 ## Testing
 [https://docs.stripe.com/testing](https://docs.stripe.com/testing)  
   
-> **TEST CARD**  
-> Mastercard:   5555 5555 5555 4444  
-> CVC:          Any 3 digits  
-> Exp. Date:    Any future date  
+    **WORKING CARD**  
+    Mastercard (credit):  5555 5555 5555 4444  
+    CVC:                  Any 3 digits  
+    Exp. Date:            Any future date  
+    
+    Visa (debit):         4000 0566 5566 5556  
+    CVC:                  Any 3 digits  
+    Exp. Date:            Any future date  
+      
+      
+    **ERROR CARD**  
+    Insufficient funds decline:         4000 0000 0000 9995  
+    Always blocked (Fraud prevention):  4100 0000 0000 0019  
+    CVC check fails:                    4000 0000 0000 0101  
+
